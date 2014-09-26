@@ -2254,109 +2254,105 @@ function startup () {
 							serverData.stats.ctHitsThisRun++;
 						switch (httpRequest.method) {
 							case "GET":
-								switch (parsedUrl.pathname.toLowerCase ()) {
-									case "/version":
-										httpResponse.writeHead (200, {"Content-Type": "text/plain", "Access-Control-Allow-Origin": "*"});
-										httpResponse.end (myVersion);
-										break;
-									case "/now":
-										httpResponse.writeHead (200, {"Content-Type": "text/plain", "Access-Control-Allow-Origin": "*"});
-										httpResponse.end (now.toString ());
-										break;
-									case "/status":
-										var myStatus = {
-											version: myVersion,
-											now: now.toUTCString (),
-											whenServerStart: whenServerStart.toUTCString (),
-											s3Path: s3path, //7/31/14 by DW
-											port: myPort, //7/31/14 by DW
-											defaultAcl: process.env.s3defaultAcl, //7/31/14 by DW
-											hits: serverData.stats.ctHits,
-											hitsToday: serverData.stats.ctHitsToday,
-											hitsThisRun: serverData.stats.ctHitsThisRun
-											};
-										httpResponse.writeHead (200, {"Content-Type": "text/plain", "Access-Control-Allow-Origin": "*"});
-										httpResponse.end (JSON.stringify (myStatus, undefined, 4));
-										break;
-									case "/serverdata":
-										updateStatsBeforeSave ();
-										httpResponse.writeHead (200, {"Content-Type": "text/plain", "Access-Control-Allow-Origin": "*"});
-										httpResponse.end (JSON.stringify (serverData.stats, undefined, 4));
-										break;
-									case "/feedstats":
-										httpResponse.writeHead (200, {"Content-Type": "text/plain", "Access-Control-Allow-Origin": "*"});
-										httpResponse.end (JSON.stringify (feedsArray, undefined, 4));
-										break;
-									case "/buildallrivers":
-										httpResponse.writeHead (200, {"Content-Type": "text/plain", "Access-Control-Allow-Origin": "*"});
-										if (serverData.prefs.enabled) {
-											buildAllRivers ();
-											httpResponse.end ("Your rivers are building sir or madam.");
+								var pathName = parsedUrl.pathname.toLowerCase()
+								if (pathName === "/version") {
+									httpResponse.writeHead (200, {"Content-Type": "text/plain", "Access-Control-Allow-Origin": "*"});
+									httpResponse.end (myVersion);
+								} else if (pathName === "/now") {
+									httpResponse.writeHead (200, {"Content-Type": "text/plain", "Access-Control-Allow-Origin": "*"});
+									httpResponse.end (now.toString ());
+								} else if (pathName === "/status") {
+									var myStatus = {
+										version: myVersion,
+										now: now.toUTCString (),
+										whenServerStart: whenServerStart.toUTCString (),
+										s3Path: s3path, //7/31/14 by DW
+										port: myPort, //7/31/14 by DW
+										defaultAcl: process.env.s3defaultAcl, //7/31/14 by DW
+										hits: serverData.stats.ctHits,
+										hitsToday: serverData.stats.ctHitsToday,
+										hitsThisRun: serverData.stats.ctHitsThisRun
+										};
+									httpResponse.writeHead (200, {"Content-Type": "text/plain", "Access-Control-Allow-Origin": "*"});
+									httpResponse.end (JSON.stringify (myStatus, undefined, 4));
+								} else if (pathName === "/serverdata") {
+									updateStatsBeforeSave ();
+									httpResponse.writeHead (200, {"Content-Type": "text/plain", "Access-Control-Allow-Origin": "*"});
+									httpResponse.end (JSON.stringify (serverData.stats, undefined, 4));
+								} else if (pathName === "/feedstats") {
+									httpResponse.writeHead (200, {"Content-Type": "text/plain", "Access-Control-Allow-Origin": "*"});
+									httpResponse.end (JSON.stringify (feedsArray, undefined, 4));
+								} else if (pathName === "/buildallrivers") {
+									httpResponse.writeHead (200, {"Content-Type": "text/plain", "Access-Control-Allow-Origin": "*"});
+									if (serverData.prefs.enabled) {
+										buildAllRivers ();
+										httpResponse.end ("Your rivers are building sir or madam.");
+										}
+									else {
+										httpResponse.end ("Can't build the rivers because serverData.prefs.enabled is false.");
+										}
+								} else if (pathName === "/loadlists") {
+									loadListsFromFolder ();
+									httpResponse.writeHead (200, {"Content-Type": "text/plain", "Access-Control-Allow-Origin": "*"});
+									httpResponse.end ("We're reading the lists, right now, as we speak.");
+								} else if (pathName === "/dashboad") { //6/2/14 by DW
+									httpResponse.writeHead (200, {"Content-Type": "text/html"});
+									request (urlDashboardSource, function (error, response, htmltext) {
+										if (!error && response.statusCode == 200) {
+											httpResponse.end (htmltext);
 											}
-										else {
-											httpResponse.end ("Can't build the rivers because serverData.prefs.enabled is false.");
-											}
-										break;
-									case "/loadlists":
-										loadListsFromFolder ();
-										httpResponse.writeHead (200, {"Content-Type": "text/plain", "Access-Control-Allow-Origin": "*"});
-										httpResponse.end ("We're reading the lists, right now, as we speak.");
-									case "/dashboard": //6/2/14 by DW
-										httpResponse.writeHead (200, {"Content-Type": "text/html"});
-										request (urlDashboardSource, function (error, response, htmltext) {
-											if (!error && response.statusCode == 200) {
-												httpResponse.end (htmltext);
-												}
-											});
-										break;
-
-									case "/ping": //9/11/14 by DW
-										var url = parsedUrl.query.url;
-										httpResponse.writeHead (200, {"Content-Type": "text/plain", "Access-Control-Allow-Origin": "*"});
-										if (findInFeedsArray (url) == undefined) {
-											httpResponse.end ("Ping received, but we're not following this feed. Sorry.");
-											}
-										else {
-											httpResponse.end ("Ping received, will read asap.");
-											readFeed (url);
-											}
-										break;
-
-									case "/index": //9/26/14 AS
-										httpResponse.writeHead (200, {"Content-Type": "text/html", "Access-Control-Allow-Origin": "*"});
-										fs.createReadStream(s3IndexFile).pipe(httpResponse);
-										break;
-
-									case "/data/prefsandstats.json": //9/26/14 AS
+										});
+								} else if (pathName === "/ping") { //9/11/14 by DW
+									var url = parsedUrl.query.url;
+									httpResponse.writeHead (200, {"Content-Type": "text/plain", "Access-Control-Allow-Origin": "*"});
+									if (findInFeedsArray (url) == undefined) {
+										httpResponse.end ("Ping received, but we're not following this feed. Sorry.");
+										}
+									else {
+										httpResponse.end ("Ping received, will read asap.");
+										readFeed (url);
+										}
+								} else if (pathName === "/index") { //9/26/14 AS
+									httpResponse.writeHead (200, {"Content-Type": "text/html", "Access-Control-Allow-Origin": "*"});
+									fs.createReadStream(s3IndexFile).pipe(httpResponse);
+								} else if (pathName.indexOf("/data") === 0) {
+									if (pathName === "/data/prefsandstats.json") {
 										httpResponse.writeHead (200, {"Content-Type": "application/json", "Access-Control-Allow-Origin": "*"});
 										fs.createReadStream(s3PrefsAndStatsPath).pipe(httpResponse);
-										break;
-
-									case "/data/feedsstats.json":
+									} else if (pathName === "/data/feedsstats.json") {
 										httpResponse.writeHead (200, {"Content-Type": "application/json", "Access-Control-Allow-Origin": "*"});
 										fs.createReadStream(s3FeedsArrayPath).pipe(httpResponse);
-										break;
-
-									case "/data/riversarray.json":
-								 		httpResponse.writeHead (200, {"Content-Type": "application/json", "Access-Control-Allow-Origin": "*"});
+									} else if (pathName === "/data/riversarray.json") {
+										httpResponse.writeHead (200, {"Content-Type": "application/json", "Access-Control-Allow-Origin": "*"});
 										fs.createReadStream(s3RiversArrayPath).pipe(httpResponse);
-										break;
-
-
-									case "/data/feedsinlists.json":
+									} else if (pathName === "/data/feedsinlists.json") {
 										httpResponse.writeHead (200, {"Content-Type": "application/json", "Access-Control-Allow-Origin": "*"});
 										fs.createReadStream(s3FeedsInListsPath).pipe(httpResponse);
-										break;
-
-									case "/rivers/apple.js":
-										httpResponse.writeHead (200, {"Content-Type": "application/json", "Access-Control-Allow-Origin": "*"});
-										fs.createReadStream(s3path + "rivers/apple.js").pipe(httpResponse)
-										break;
-
-									default: //404 not found
+									} else { // 404 not found
 										httpResponse.writeHead (404, {"Content-Type": "text/plain", "Access-Control-Allow-Origin": "*"});
 										httpResponse.end ("\"" + parsedUrl.pathname.toLowerCase () + "\" is not one of the endpoints defined by this server.");
 									}
+								} else if (pathName.indexOf("/rivers") === 0) {
+									console.log('\n\n')
+									console.log(pathName)
+									fs.readdir(s3UserRiversPath, function(err, arrayOfRiverPaths) {
+										console.log(arrayOfRiverPaths)
+										if (err) throw err;
+										var matchingRiverPath = arrayOfRiverPaths.filter(function(riverPath) {
+											return pathName === "/rivers/" + riverPath.toLowerCase();
+										});
+										if (matchingRiverPath && matchingRiverPath.length) {
+											httpResponse.writeHead (200, {"Content-Type": "text/javascript", "Access-Control-Allow-Origin": "*"});
+											fs.createReadStream(s3UserRiversPath + matchingRiverPath[0]).pipe(httpResponse)
+										} else { // 404 not found
+											httpResponse.writeHead (404, {"Content-Type": "text/plain", "Access-Control-Allow-Origin": "*"});
+											httpResponse.end ("\"" + parsedUrl.pathname.toLowerCase () + "\" is not one of the endpoints defined by this server.");
+										}
+									})
+								} else {
+									httpResponse.writeHead (404, {"Content-Type": "text/plain", "Access-Control-Allow-Origin": "*"});
+									httpResponse.end ("\"" + parsedUrl.pathname.toLowerCase () + "\" is not one of the endpoints defined by this server.");
+								}
 								break;
 							}
 						}
