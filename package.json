@@ -5,17 +5,17 @@
   "author": "Dave Winer <dave@smallpicture.com>",
   "version": "0.0.79",
   "scripts": {
-     "start": "node river4.js"
-     },
-  "dependencies" : {
-    "aws-sdk": "*", 
-    "request": "*",
-    "MD5": "*",
-    "feedparser": "*",
-    "opmlparser": "*"
-    }, 
+    "start": "node river4.js"
+  },
+  "dependencies": {
+    "aws-sdk": "~2.0.17",
+    "request": "~2.44.0",
+    "MD5": "~1.2.1",
+    "feedparser": "~0.19.2",
+    "opmlparser": "~0.7.0"
+  },
   "license": "GPL",
   "engines": {
     "node": ">=0.8.x"
-    }
   }
+}
